@@ -20,7 +20,7 @@ import java.util.Map;
  * The Mysql class implements methods to manage databases more easily.
  *
  * @author Alex "yum-y" Torregrosa Romero
- * @version 1.00
+ * @version 1.01
  * @since 2017-03-01
  */
 public class Mysql {
