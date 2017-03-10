@@ -13,7 +13,12 @@ import java.sql.Statement;
 
 /**
  *
- * @author mati
+ * <h1>Databases - Mysql</h1>
+ * The Mysql class implements 
+ * 
+ * @author Alex "yum-y" Torregrosa Romero
+ * @version 1.00
+ * @since 2017-03-01
  */
 public class Mysql {
     private Exception errno, connect_errno;
@@ -40,6 +45,9 @@ public class Mysql {
     }
     public String error() {
         return error;
+    }
+    public String[] fetch_array(ResultSet result, String fetch) {
+        return null;
     }
     public ResultSet query(Connection link, String q) {
         try {
