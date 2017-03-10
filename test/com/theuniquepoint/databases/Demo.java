@@ -11,7 +11,7 @@ import java.util.Map;
 
 /**
  *
- * @author mati
+ * @author Alex "yum-y" Torregrosa Romero
  */
 public class Demo {
     static Mysql mysql = new Mysql();
