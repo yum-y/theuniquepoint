@@ -165,7 +165,7 @@ public class Mysql {
      */
     public String getHostInfo(Connection link) {
         try {
-            return link.getMetaData().getDatabaseProductName();
+            return link.getMetaData().getURL();
         } catch (SQLException e) {
             exception(e);
         }
