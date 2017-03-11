@@ -20,16 +20,93 @@ import java.util.Map;
  * The Mysql class implements methods to manage databases more easily.
  *
  * @author Alex "yum-y" Torregrosa Romero
- * @version 1.01
+ * @version 1.02
  * @since 2017-03-01
  */
 public class Mysql {
+    private int AffectedRows = -1;
 
     private void exception(Exception e) {
         System.out.println(e);
         System.exit(0);
     }
 
+    /**
+     * Gets the number of affected rows in a previous MySQL operation.
+     * 
+     * @param link A link identifier returned by connect().
+     * @return An integer greater than zero indicates the number of rows 
+     * affected or retrieved. Zero indicates that no records were updated for 
+     * an UPDATE statement, no rows matched the WHERE clause in the query or 
+     * that no query has yet been executed. -1 indicates that the query 
+     * returned a ResultSet or an error.
+     */
+    public int affectedRows(Connection link) {
+        return AffectedRows;
+    }
+    
+    /**
+     * Turns on or off auto-committing database modifications.
+     * 
+     * @param link A link identifier returned by connect().
+     * @param mode Whether to turn on auto-commit or not.
+     * @return Returns TRUE on success or FALSE on failure.
+     */
+    public boolean autocommit(Connection link, boolean mode) {
+        try {
+            link.setAutoCommit(mode);
+            return true;
+        } catch (SQLException e) {
+            exception(e);
+        }
+        return false;
+    }
+    
+    /**
+     * Starts a transaction.
+     * 
+     * @param link A link identifier returned by connect().
+     * @return Returns TRUE on success or FALSE on failure.
+     */
+    public boolean beginTransaction(Connection link) {
+        try {
+            link.setAutoCommit(false);
+            return true;
+        } catch (SQLException e) {
+            exception(e);
+        }
+        return false;
+    }
+    
+    /**
+     * Closes a previously opened database connection.
+     *
+     * @param link A link identifier returned by connect().
+     */
+    public void close(Connection link) {
+        try {
+            link.close();
+        } catch (SQLException e) {
+            exception(e);
+        }
+    }
+    
+    /**
+     * Commits the current transaction
+     * 
+     * @param link A link identifier returned by connect().
+     * @return Returns TRUE on success or FALSE on failure.
+     */
+    public boolean commit(Connection link) {
+        try {
+            link.commit();
+            link.setAutoCommit(true);
+        } catch (SQLException e) {
+            exception(e);
+        }
+        return false;
+    }
+    
     /**
      * Opens a connection to the MySQL Server running on.
      *
@@ -55,7 +132,7 @@ public class Mysql {
     /**
      * Frees the memory associated with a result
      *
-     * @param result A result set identifier returned by queryRead().
+     * @param result A result set identifier returned by query().
      */
     public void freeResult(ResultSet result) {
         try {
@@ -63,6 +140,21 @@ public class Mysql {
         } catch (SQLException e) {
             exception(e);
         }
+    }
+    
+    /**
+     * Returns the status of Autocommit.
+     * 
+     * @param link
+     * @return Returns TRUE if Autocommit is enabled or FALSE if disabled.
+     */
+    public boolean getAutocommit(Connection link) {
+        try {
+            return link.getAutoCommit();
+        } catch (SQLException e) {
+            exception(e);
+        }
+        return false;
     }
     
     /**
@@ -98,7 +190,7 @@ public class Mysql {
     /**
      * Fetch a result row as an associative map.
      *
-     * @param result A result set identifier returned by queryRead().
+     * @param result A result set identifier returned by query().
      * @return Returns an associative map that corresponds to the fetched row or
      * NULL if there are no more rows.
      */
@@ -121,7 +213,7 @@ public class Mysql {
     /**
      * Get a result row as an enumerated array.
      *
-     * @param result A result set identifier returned by queryRead().
+     * @param result A result set identifier returned by query().
      * @return Returns an array of strings that corresponds to the fetched row
      * or NULL if there are no more rows.
      */
@@ -143,7 +235,7 @@ public class Mysql {
     /**
      * Returns the number of columns in statements result set.
      *
-     * @param result A result set identifier returned by queryRead().
+     * @param result A result set identifier returned by query().
      * @return An integer representing the number of fields in a result set.
      */
     public int fieldCount(ResultSet result) {
@@ -159,7 +251,7 @@ public class Mysql {
     /**
      * Return the number of rows in statements result set.
      *
-     * @param result A result set identifier returned by queryRead().
+     * @param result A result set identifier returned by query().
      * @return An integer representing the number of rows in result set.
      */
     public int numRows(ResultSet result) {
@@ -176,11 +268,37 @@ public class Mysql {
     }
 
     /**
+     * Performs a query on the database.
+     * 
+     * @param link A link identifier returned by connect().
+     * @param q The query string.
+     * @return For successful SELECT, SHOW, DESCRIBE or EXPLAIN queries 
+     * query() will return a ResultSet object. Returns NULL for DML queries 
+     * like INSERT, UPDATE or DELETE or on failure.
+     */
+    public ResultSet query(Connection link, String q) {
+        try {
+            Statement st = link.createStatement();
+            if (st.execute(q)) {
+                AffectedRows = -1;
+                return st.getResultSet();
+            } else {
+                AffectedRows = st.getUpdateCount();
+            }
+        } catch (SQLException e) {
+            exception(e);
+        }
+        return null;
+    }
+    
+    /**
      * Performs an execute query on the database.
      *
      * @param link A link identifier returned by connect().
      * @param q The query string.
+     * @deprecated Use query() instead.
      */
+    @Deprecated
     public void queryExecute(Connection link, String q) {
         try {
             Statement st = link.createStatement();
@@ -197,7 +315,9 @@ public class Mysql {
      * @param q The query string.
      * @return Returns NULL on failure. For successful SELECT, SHOW, DESCRIBE or
      * EXPLAIN queries queryRead() will return a ResultSet object.
+     * @deprecated Use query() instead.
      */
+    @Deprecated
     public ResultSet queryRead(Connection link, String q) {
         try {
             Statement st = link.createStatement();
@@ -209,15 +329,19 @@ public class Mysql {
     }
     
     /**
-     * Closes a previously opened database connection.
-     *
+     * Rolls back current transaction.
+     * 
      * @param link A link identifier returned by connect().
+     * @return Returns TRUE on success or FALSE on failure.
      */
-    public void close(Connection link) {
+    public boolean rollback(Connection link) {
         try {
-            link.close();
+            link.rollback();
+            link.setAutoCommit(true);
+            return true;
         } catch (SQLException e) {
             exception(e);
         }
+        return false;
     }
 }
