@@ -17,7 +17,7 @@ public class Demo {
     static Mysql mysql = new Mysql();
     
     public static void main(String[] args) {
-        printInfo();
+        transactions();
     }
     
     static void createTableInserts() {
