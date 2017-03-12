@@ -10,20 +10,21 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
  * <h1>Databases - Mysql</h1>
  * The Mysql class implements methods to manage databases more easily.
  *
  * @author Alex "yum-y" Torregrosa Romero
- * @version 1.02
+ * @version 1.03
  * @since 2017-03-01
  */
 public class Mysql {
+
     private int AffectedRows = -1;
 
     private void exception(Exception e) {
@@ -33,21 +34,21 @@ public class Mysql {
 
     /**
      * Gets the number of affected rows in a previous MySQL operation.
-     * 
+     *
      * @param link A link identifier returned by connect().
-     * @return An integer greater than zero indicates the number of rows 
-     * affected or retrieved. Zero indicates that no records were updated for 
-     * an UPDATE statement, no rows matched the WHERE clause in the query or 
-     * that no query has yet been executed. -1 indicates that the query 
-     * returned a ResultSet or an error.
+     * @return An integer greater than zero indicates the number of rows
+     * affected or retrieved. Zero indicates that no records were updated for an
+     * UPDATE statement, no rows matched the WHERE clause in the query or that
+     * no query has yet been executed. -1 indicates that the query returned a
+     * ResultSet or an error.
      */
     public int affectedRows(Connection link) {
         return AffectedRows;
     }
-    
+
     /**
      * Turns on or off auto-committing database modifications.
-     * 
+     *
      * @param link A link identifier returned by connect().
      * @param mode Whether to turn on auto-commit or not.
      * @return Returns TRUE on success or FALSE on failure.
@@ -61,10 +62,10 @@ public class Mysql {
         }
         return false;
     }
-    
+
     /**
      * Starts a transaction.
-     * 
+     *
      * @param link A link identifier returned by connect().
      * @return Returns TRUE on success or FALSE on failure.
      */
@@ -77,7 +78,7 @@ public class Mysql {
         }
         return false;
     }
-    
+
     /**
      * Closes a previously opened database connection.
      *
@@ -90,10 +91,10 @@ public class Mysql {
             exception(e);
         }
     }
-    
+
     /**
      * Commits the current transaction
-     * 
+     *
      * @param link A link identifier returned by connect().
      * @return Returns TRUE on success or FALSE on failure.
      */
@@ -106,7 +107,7 @@ public class Mysql {
         }
         return false;
     }
-    
+
     /**
      * Opens a connection to the MySQL Server running on.
      *
@@ -141,10 +142,10 @@ public class Mysql {
             exception(e);
         }
     }
-    
+
     /**
      * Returns the status of Autocommit.
-     * 
+     *
      * @param link
      * @return Returns TRUE if Autocommit is enabled or FALSE if disabled.
      */
@@ -156,12 +157,13 @@ public class Mysql {
         }
         return false;
     }
-    
+
     /**
      * Returns a string representing the type of connection used.
-     * 
+     *
      * @param link A link identifier returned by connect().
-     * @return A character string representing the server hostname and the connection type.
+     * @return A character string representing the server hostname and the
+     * connection type.
      */
     public String getHostInfo(Connection link) {
         try {
@@ -171,10 +173,10 @@ public class Mysql {
         }
         return null;
     }
-    
+
     /**
      * Returns the version of the MySQL server.
-     * 
+     *
      * @param link A link identifier returned by connect().
      * @return A character string representing the server version.
      */
@@ -269,12 +271,12 @@ public class Mysql {
 
     /**
      * Performs a query on the database.
-     * 
+     *
      * @param link A link identifier returned by connect().
      * @param q The query string.
-     * @return For successful SELECT, SHOW, DESCRIBE or EXPLAIN queries 
-     * query() will return a ResultSet object. Returns NULL for DML queries 
-     * like INSERT, UPDATE or DELETE or on failure.
+     * @return For successful SELECT, SHOW, DESCRIBE or EXPLAIN queries query()
+     * will return a ResultSet object. Returns NULL for DML queries like INSERT,
+     * UPDATE or DELETE or on failure.
      */
     public ResultSet query(Connection link, String q) {
         try {
@@ -290,7 +292,7 @@ public class Mysql {
         }
         return null;
     }
-    
+
     /**
      * Performs an execute query on the database.
      *
@@ -307,7 +309,7 @@ public class Mysql {
             exception(e);
         }
     }
-    
+
     /**
      * Performs a result query on the database.
      *
@@ -327,10 +329,10 @@ public class Mysql {
         }
         return null;
     }
-    
+
     /**
      * Rolls back current transaction.
-     * 
+     *
      * @param link A link identifier returned by connect().
      * @return Returns TRUE on success or FALSE on failure.
      */
@@ -343,5 +345,37 @@ public class Mysql {
             exception(e);
         }
         return false;
+    }
+
+    /**
+     * Roll back the current transaction to a saved point.
+     *
+     * @param link A link identifier returned by connect().
+     * @param save A save point object.
+     * @return Returns TRUE on success or FALSE on failure.
+     */
+    public boolean rollback(Connection link, Savepoint save) {
+        try {
+            link.rollback(save);
+            return true;
+        } catch (SQLException e) {
+            exception(e);
+        }
+        return false;
+    }
+
+    /**
+     * Set a named transaction savepoint
+     *
+     * @param link A link identifier returned by connect().
+     * @return The save point object on success or NULL on failure.
+     */
+    public Savepoint savepoint(Connection link) {
+        try {
+            return link.setSavepoint();
+        } catch (SQLException e) {
+            exception(e);
+        }
+        return null;
     }
 }
